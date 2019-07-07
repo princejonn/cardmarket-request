@@ -30,4 +30,5 @@ When making a download request to one of the (currently 3) routes with files, th
 - POST - _disabled_
 - PUT - _disabled_
 - DELETE - _disabled_
-It's possible to make any requests without body. GET requests and requests with query parameters are enabled.
+
+It's possible to make any requests without body. GET requests and requests with query parameters are enabled. I will enable POST requests once I have it figured out.
