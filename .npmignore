@@ -1,0 +1,12 @@
+downloads
+node_modules
+src
+.idea
+.vscode
+.babelrc
+.eslintignore
+.eslintrc
+.huskyrc
+.npmignore
+.npmrc
+.DS_Store
