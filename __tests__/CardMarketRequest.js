@@ -21,18 +21,18 @@ describe("cardmarket-request", () => {
 
   test("throws errors", () => {
     expect(() => {
-      new CardMarketRequest();
+      new CardMarketRequest.default();
     }).toThrow();
 
     expect(() => {
-      new CardMarketRequest({
+      new CardMarketRequest.default({
         appToken: 1234,
         appSecret,
       });
     }).toThrow();
 
     expect(() => {
-      new CardMarketRequest({
+      new CardMarketRequest.default({
         appToken,
         appSecret: undefined,
       });
@@ -40,7 +40,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns oauth header", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -60,7 +60,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns api url", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -75,7 +75,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns sandbox url", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -87,7 +87,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns signature", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -98,7 +98,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns different signature with query parameters", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -109,7 +109,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns base string", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -127,7 +127,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns base string with query parameters", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -138,7 +138,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns signature key", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -149,7 +149,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns params string", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -166,7 +166,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns validated params object", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -182,7 +182,7 @@ describe("cardmarket-request", () => {
   });
 
   test("returns params object", () => {
-    const cmr = new CardMarketRequest({
+    const cmr = new CardMarketRequest.default({
       appToken,
       appSecret,
     });
@@ -197,19 +197,19 @@ describe("cardmarket-request", () => {
   });
 
   test("returns hmac string", () => {
-    const result = CardMarketRequest._getHmac(appToken, appSecret);
+    const result = CardMarketRequest.default._getHmac(appToken, appSecret);
 
     expect(result).toBe("NBhSEHjTSiSkfOyafRdYeYxbjzM=");
   });
 
   test("returns timestamp", () => {
-    const result = CardMarketRequest._getTimestamp();
+    const result = CardMarketRequest.default._getTimestamp();
 
     expect(result).toBeGreaterThan(0);
   });
 
   test("returns sorted object", () => {
-    const result = CardMarketRequest._sortObject({
+    const result = CardMarketRequest.default._sortObject({
       b: "b",
       c: "c",
       a: "a",
