@@ -18,7 +18,7 @@ import UUIDv4 from "uuid/v4";
  * 3 - Request to API turned off & all returns logged to console
  */
 
-export default class MKMRequest {
+export default class CardMarketRequest {
   /**
    * @param {object} options
    * @param {string} options.appToken
@@ -81,6 +81,10 @@ export default class MKMRequest {
     const body = await this.get(route);
     const ignoredKeys = [ "mime", "links" ];
 
+    if (this._debug > 2) {
+      return null;
+    }
+
     let base64Key;
     let base64String;
 
@@ -104,7 +108,7 @@ export default class MKMRequest {
 
     return new Promise((resolve, reject) => {
       fs.writeFile(writePath, binaryBuffer, (err) => {
-        if (err) reject(err);
+        if (err) return reject(err);
         resolve(writePath);
       });
     });
@@ -145,21 +149,18 @@ export default class MKMRequest {
 
     return new Promise((resolve, reject) => {
       request(options, (err, res, body) => {
-        if (err) {
-          reject(err);
-        }
+        if (err) return reject(err);
         if (this._debug > 1) {
           console.log("response:", res.toJSON());
         }
         const firstNumber = parseInt(res.statusCode.toString().slice(0, 1));
         if (firstNumber === 4 || firstNumber === 5) {
-          reject(res.toJSON());
-        } else {
-          if (this._responseType === "json") {
-            body = JSON.parse(body);
-          }
-          resolve(body);
+          return reject(res.toJSON());
         }
+        if (this._responseType === "json") {
+          body = JSON.parse(body);
+        }
+        resolve(body);
       });
     });
   }
@@ -269,7 +270,7 @@ export default class MKMRequest {
     const string = this._getBaseString(method, route, params, queryParameters);
     const signatureKey = this._getSignatureKey();
 
-    const signature = MKMRequest._getHmac(string, signatureKey);
+    const signature = CardMarketRequest._getHmac(string, signatureKey);
 
     if (this._debug > 2) {
       console.log("_getSignature:", signature);
@@ -373,7 +374,7 @@ export default class MKMRequest {
       clonedParams[key] = "";
     }
 
-    const sortedParams = MKMRequest._sortObject(clonedParams);
+    const sortedParams = CardMarketRequest._sortObject(clonedParams);
 
     if (this._debug > 2) {
       console.log("_validateParams:", sortedParams);
@@ -391,14 +392,14 @@ export default class MKMRequest {
   _getParams() {
     const params = {
       oauth_version: "1.0",
-      oauth_timestamp: MKMRequest._getTimestamp(),
-      oauth_nonce: MKMRequest._getNonce(),
+      oauth_timestamp: CardMarketRequest._getTimestamp(),
+      oauth_nonce: CardMarketRequest._getNonce(),
       oauth_signature_method: "HMAC-SHA1",
       oauth_consumer_key: this._appToken,
       oauth_token: this._accessToken || "",
     };
 
-    const sorted = MKMRequest._sortObject(params);
+    const sorted = CardMarketRequest._sortObject(params);
 
     if (this._debug > 2) {
       console.log("_getParams:", sorted);
