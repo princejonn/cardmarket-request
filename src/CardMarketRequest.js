@@ -1,3 +1,4 @@
+import os from "os";
 import fs from "fs";
 import path from "path";
 import Crypto from "crypto";
@@ -97,7 +98,7 @@ export default class CardMarketRequest {
     base64String = body[base64Key];
 
     const binaryBuffer = Buffer.from(base64String, "base64");
-    const cwd = path.join(process.cwd(), "downloads");
+    const cwd = path.join(os.homedir(), ".mtg-tools", "downloads");
     const fileName = `${base64Key}.csv.gz`;
 
     if (!fs.existsSync(cwd)) {
