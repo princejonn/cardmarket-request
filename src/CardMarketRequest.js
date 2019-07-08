@@ -97,7 +97,7 @@ export default class CardMarketRequest {
     base64String = body[base64Key];
 
     const binaryBuffer = Buffer.from(base64String, "base64");
-    const cwd = path.join(process.env.PWD, "downloads");
+    const cwd = path.join(process.cwd(), "downloads");
     const fileName = `${base64Key}.csv.gz`;
 
     if (!fs.existsSync(cwd)) {
