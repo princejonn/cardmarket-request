@@ -4,6 +4,8 @@ import path from "path";
 import Crypto from "crypto";
 import cloneDeep from "lodash/cloneDeep";
 import includes from "lodash/includes";
+import isBoolean from "lodash/isBoolean";
+import isNumber from "lodash/isNumber";
 import isObject from "lodash/isObject";
 import isString from "lodash/isString";
 import PercentEncode from "oauth-percent-encode";
@@ -29,6 +31,7 @@ export default class CardMarketRequest {
    * @param {number} [options.debug]
    * @param {boolean} [options.sandbox]
    * @param {string} [options.responseType]
+   * @param {string} [options.cwd]
    */
   constructor(options) {
     if (!isObject(options)) {
@@ -46,16 +49,33 @@ export default class CardMarketRequest {
     if (options.accessSecret && !isString(options.accessSecret)) {
       throw new Error(`accessSecret incorrect [ ${options.accessSecret} ]`);
     }
-
-    this._debug = options.debug || 0;
-    this._sandbox = options.sandbox || false;
-    this._responseType = options.responseType || "json";
+    if (options.debug && !isNumber(options.debug)) {
+      throw new Error(`debug incorrect [ ${options.debug} ]`);
+    }
+    if (options.sandbox && !isBoolean(options.sandbox)) {
+      throw new Error(`sandbox incorrect [ ${options.sandbox} ]`);
+    }
+    if (options.responseType && !isString(options.responseType)) {
+      throw new Error(`responseType incorrect [ ${options.responseType} ]`);
+    }
+    if (options.cwd && !isString(options.cwd)) {
+      throw new Error(`cwd incorrect [ ${options.cwd} ]`);
+    }
 
     this._appToken = options.appToken;
     this._appSecret = options.appSecret;
 
     this._accessToken = options.accessToken;
     this._accessSecret = options.accessSecret;
+
+    this._debug = options.debug || 0;
+    this._sandbox = options.sandbox || false;
+    this._responseType = options.responseType || "json";
+    this._cwd = options.cwd || path.join(os.homedir(), ".mtg-tools", "downloads");
+
+    if (!fs.existsSync(this._cwd)) {
+      fs.mkdirSync(this._cwd, { recursive: true });
+    }
   }
 
   /**
@@ -98,14 +118,9 @@ export default class CardMarketRequest {
     base64String = body[base64Key];
 
     const binaryBuffer = Buffer.from(base64String, "base64");
-    const cwd = path.join(os.homedir(), ".mtg-tools", "downloads");
     const fileName = `${base64Key}.csv.gz`;
 
-    if (!fs.existsSync(cwd)) {
-      fs.mkdirSync(cwd);
-    }
-
-    const writePath = path.join(cwd, fileName);
+    const writePath = path.join(this._cwd, fileName);
 
     return new Promise((resolve, reject) => {
       fs.writeFile(writePath, binaryBuffer, (err) => {
