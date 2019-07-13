@@ -50,21 +50,21 @@ const csvPath = await FileTool.unzip(gzPath);
 const { path, keys } = await FileTool.createJSON(csvPath);
 
 console.log(path);
-// '/Users/<user>/cardmarket-request/downloads/priceguidefile.json'
+## '/Users/<user>/.mtg-tools/downloads/priceguidefile.json'
 
 console.log(keys);
-// [
-//  'idProduct',
-//  'Avg',
-//  'Low Price',
-//  'Trend Price',
-//  'German Pro Low',
-//  'Suggested Price',
-//  'Foil Sell',
-//  'Foil Low',
-//  'Foil Trend',
-//  'Low Price Ex+'
-// ]
+## [
+##  'idProduct',
+##  'Avg',
+##  'Low Price',
+##  'Trend Price',
+##  'German Pro Low',
+##  'Suggested Price',
+##  'Foil Sell',
+##  'Foil Low',
+##  'Foil Trend',
+##  'Low Price Ex+'
+## ]
 ```
 
 ## What it does
