@@ -1,6 +1,6 @@
 {
   "name": "cardmarket-request",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "author": "jonn@jonn.nu",
   "description": "Making Cardmarket API requests simpler for ECMA applications",
   "license": "MIT",
