@@ -5,12 +5,12 @@ import Crypto from "crypto";
 import cloneDeep from "lodash/cloneDeep";
 import includes from "lodash/includes";
 import isBoolean from "lodash/isBoolean";
-import isNumber from "lodash/isNumber";
 import isObject from "lodash/isObject";
 import isString from "lodash/isString";
 import PercentEncode from "oauth-percent-encode";
 import request from "request";
 import UUIDv4 from "uuid/v4";
+import Logger from "utils/Logger";
 
 /*
  * Debug Levels:
@@ -28,10 +28,10 @@ export default class CardMarketRequest {
    * @param {string} options.appSecret
    * @param {string} [options.accessToken]
    * @param {string} [options.accessSecret]
-   * @param {number} [options.debug]
+   * @param {boolean} [options.debug]
    * @param {boolean} [options.sandbox]
    * @param {string} [options.responseType]
-   * @param {string} [options.cwd]
+   * @param {string} [options.workDir]
    */
   constructor(options) {
     if (!isObject(options)) {
@@ -49,7 +49,7 @@ export default class CardMarketRequest {
     if (options.accessSecret && !isString(options.accessSecret)) {
       throw new Error(`accessSecret incorrect [ ${options.accessSecret} ]`);
     }
-    if (options.debug && !isNumber(options.debug)) {
+    if (options.debug && !isBoolean(options.debug)) {
       throw new Error(`debug incorrect [ ${options.debug} ]`);
     }
     if (options.sandbox && !isBoolean(options.sandbox)) {
@@ -58,9 +58,11 @@ export default class CardMarketRequest {
     if (options.responseType && !isString(options.responseType)) {
       throw new Error(`responseType incorrect [ ${options.responseType} ]`);
     }
-    if (options.cwd && !isString(options.cwd)) {
-      throw new Error(`cwd incorrect [ ${options.cwd} ]`);
+    if (options.workDir && !isString(options.workDir)) {
+      throw new Error(`workDir incorrect [ ${options.workDir} ]`);
     }
+
+    this._logger = Logger.getContextLogger("request");
 
     this._appToken = options.appToken;
     this._appSecret = options.appSecret;
@@ -68,13 +70,13 @@ export default class CardMarketRequest {
     this._accessToken = options.accessToken;
     this._accessSecret = options.accessSecret;
 
-    this._debug = options.debug || 0;
+    this._debug = options.debug || false;
     this._sandbox = options.sandbox || false;
     this._responseType = options.responseType || "json";
-    this._cwd = options.cwd || path.join(os.homedir(), ".mtg-tools", "downloads");
+    this._workDir = options.workDir || path.join(os.homedir(), ".cardmarket-request");
 
-    if (!fs.existsSync(this._cwd)) {
-      fs.mkdirSync(this._cwd, { recursive: true });
+    if (!fs.existsSync(this._workDir)) {
+      fs.mkdirSync(this._workDir, { recursive: true });
     }
   }
 
@@ -99,10 +101,12 @@ export default class CardMarketRequest {
    * @returns {Promise<string>}
    */
   async download(route) {
+    this._logger.debug("downloading from route", route);
+
     const body = await this.get(route);
     const ignoredKeys = [ "mime", "links" ];
 
-    if (this._debug > 2) {
+    if (this._debug) {
       return null;
     }
 
@@ -120,7 +124,7 @@ export default class CardMarketRequest {
     const binaryBuffer = Buffer.from(base64String, "base64");
     const fileName = `${base64Key}.csv.gz`;
 
-    const writePath = path.join(this._cwd, fileName);
+    const writePath = path.join(this._workDir, fileName);
 
     return new Promise((resolve, reject) => {
       fs.writeFile(writePath, binaryBuffer, (err) => {
@@ -137,6 +141,9 @@ export default class CardMarketRequest {
    * @returns {Promise<string>}
    */
   async request({ method, route, queryParameters }) {
+    this._logger.debug("request method", method);
+    this._logger.debug("request route", route);
+
     if (queryParameters) {
       for (const key in queryParameters) {
         if (!queryParameters.hasOwnProperty(key)) continue;
@@ -144,6 +151,8 @@ export default class CardMarketRequest {
         queryParameters[key] = queryParameters[key].replace(/\'/g, " ");
       }
     }
+
+    this._logger.debug("request query parameters", queryParameters);
 
     const authorization = this._getOAuthHeader(method, route, queryParameters);
 
@@ -156,18 +165,18 @@ export default class CardMarketRequest {
     if (queryParameters) {
       options.data = queryParameters;
     }
-    if (this._debug > 0) {
-      console.log("request:", options);
-    }
-    if (this._debug > 2) {
+
+    this._logger.debug("full request", options);
+
+    if (this._debug) {
       return null;
     }
 
     return new Promise((resolve, reject) => {
       request(options, (err, res, body) => {
         if (err) return reject(err);
-        if (this._debug > 1) {
-          console.log("response:", res.toJSON());
+        if (this._sandbox) {
+          this._logger.debug("response", res.toJSON());
         }
         const firstNumber = parseInt(res.statusCode.toString().slice(0, 1));
         if (firstNumber === 4 || firstNumber === 5) {
@@ -179,16 +188,6 @@ export default class CardMarketRequest {
         resolve(body);
       });
     });
-  }
-
-  /**
-   * @param {number} debug
-   */
-  debug(debug) {
-    if (debug > 3) {
-      debug = 3;
-    }
-    this._debug = debug;
   }
 
   /**
@@ -233,9 +232,7 @@ export default class CardMarketRequest {
     const signature = this._getSignature(method, route, params, queryParameters);
     header += `oauth_signature="${signature}"`;
 
-    if (this._debug > 2) {
-      console.log("_getOAuthHeader:", header);
-    }
+    this._logger.debug("_getOAuthHeader", header);
 
     return header;
   }
@@ -265,9 +262,7 @@ export default class CardMarketRequest {
       url += array.join("&");
     }
 
-    if (this._debug > 2) {
-      console.log("_getURL:", url);
-    }
+    this._logger.debug("_getURL", url);
 
     return url;
   }
@@ -288,9 +283,7 @@ export default class CardMarketRequest {
 
     const signature = CardMarketRequest._getHmac(string, signatureKey);
 
-    if (this._debug > 2) {
-      console.log("_getSignature:", signature);
-    }
+    this._logger.debug("_getSignature", signature);
 
     return signature;
   }
@@ -310,9 +303,7 @@ export default class CardMarketRequest {
     let string = `${method}&${PercentEncode(url)}&`;
     string += PercentEncode(this._getParamsString(params, queryParameters));
 
-    if (this._debug > 2) {
-      console.log("_getBaseString:", string);
-    }
+    this._logger.debug("_getBaseString", string);
 
     return string;
   }
@@ -328,9 +319,7 @@ export default class CardMarketRequest {
     const accessSecret = this._accessSecret ? PercentEncode(this._accessSecret) : "";
     const signatureKey = `${appSecret}&${accessSecret}`;
 
-    if (this._debug > 2) {
-      console.log("_getSignatureKey:", signatureKey);
-    }
+    this._logger.debug("_getSignatureKey", signatureKey);
 
     return signatureKey;
   }
@@ -353,9 +342,7 @@ export default class CardMarketRequest {
 
     const string = strings.join("&");
 
-    if (this._debug > 2) {
-      console.log("_buildParams:", string);
-    }
+    this._logger.debug("_buildParams", string);
 
     return string;
   }
@@ -392,9 +379,7 @@ export default class CardMarketRequest {
 
     const sortedParams = CardMarketRequest._sortObject(clonedParams);
 
-    if (this._debug > 2) {
-      console.log("_validateParams:", sortedParams);
-    }
+    this._logger.debug("_validateParams", sortedParams);
 
     return sortedParams;
   }
@@ -417,9 +402,7 @@ export default class CardMarketRequest {
 
     const sorted = CardMarketRequest._sortObject(params);
 
-    if (this._debug > 2) {
-      console.log("_getParams:", sorted);
-    }
+    this._logger.debug("_getParams", sorted);
 
     return sorted;
   }
